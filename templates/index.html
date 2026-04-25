@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}InsightBrowser Hosting{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1>🚀 Agent 托管平台</h1>
+        <p class="hero-subtitle">让每个人都能拥有自己的 Agent 站</p>
+        <p class="hero-description">
+            无需服务器，无需写代码。提交能力描述，我们自动生成 Agent 站并托管运行。
+            就像阿里云帮你跑网站一样，InsightBrowser Hosting 帮你跑 Agent。
+        </p>
+        <div class="hero-actions">
+            <a href="/create" class="btn btn-primary">立即创建托管站 →</a>
+            <a href="/pricing" class="btn btn-secondary">查看定价</a>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <h2>为什么选择 InsightBrowser Hosting？</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>零代码创建</h3>
+            <p>只需描述你的 Agent 能力，我们自动生成运行代码和 agent.json</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">☁️</div>
+            <h3>全托管运行</h3>
+            <p>平台负责 7×24 小时运行，你只需关注业务逻辑</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔗</div>
+            <h3>自动注册</h3>
+            <p>自动向 InsightBrowser Registry 注册，让全网发现你的 Agent</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>可视化面板</h3>
+            <p>实时监控调用量、状态、活跃度，一键启停</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔐</div>
+            <h3>安全可靠</h3>
+            <p>沙箱隔离运行，数据加密存储，企业级安全</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💎</div>
+            <h3>灵活定价</h3>
+            <p>免费版可用，按需升级，企业支持私有部署</p>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <h2>三步上手</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>描述能力</h3>
+            <p>填写 Agent 名称、类型、描述和能力列表</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>自动生成</h3>
+            <p>系统生成 agent.json + 运行代码 + 注册到 Registry</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>开始使用</h3>
+            <p>Agent 站自动运行，通过 API 被其他 Agent 调用</p>
+        </div>
+    </div>
+</section>
+
+<section class="pricing-preview">
+    <h2>定价方案</h2>
+    <div class="plan-grid">
+        {% for plan_id, plan in plans.items() %}
+        <div class="plan-card {% if plan_id == 'pro' %}featured{% endif %}">
+            <h3>{{ plan.name }}</h3>
+            <div class="price">{{ plan.price_label }}</div>
+            <ul class="features">
+                {% for feature in plan.features %}
+                <li>✓ {{ feature }}</li>
+                {% endfor %}
+            </ul>
+            <a href="/pricing" class="btn btn-outline">了解更多</a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="cta-section">
+    <h2>准备好托管你的第一个 Agent 站了吗？</h2>
+    <a href="/create" class="btn btn-primary btn-large">免费创建 →</a>
+</section>
+{% endblock %}

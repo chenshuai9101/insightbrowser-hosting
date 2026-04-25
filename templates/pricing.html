@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}定价 - InsightBrowser Hosting{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>💰 定价方案</h1>
+    <p>选择适合你的方案，让 Agent 站为你的业务赋能</p>
+</div>
+
+<div class="plan-grid full-plans">
+    {% for plan_id, plan in plans.items() %}
+    <div class="plan-card {% if plan_id == 'pro' %}featured{% endif %}">
+        <div class="plan-header">
+            <h3>{{ plan.name }}</h3>
+            {% if plan_id == 'pro' %}
+            <span class="badge">推荐</span>
+            {% endif %}
+        </div>
+        <div class="price-display">
+            <span class="price-amount">{{ plan.price_label }}</span>
+        </div>
+        <ul class="plan-features">
+            {% for feature in plan.features %}
+            <li class="feature-item">✓ {{ feature }}</li>
+            {% endfor %}
+        </ul>
+        <div class="plan-action">
+            <a href="/create?plan={{ plan_id }}" class="btn {% if plan_id == 'free' %}btn-secondary{% else %}btn-primary{% endif %} btn-block">
+                {% if plan_id == 'free' %}免费开始{% else %}选择 {{ plan.name }}{% endif %}
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<section class="payment-section">
+    <h2>💳 支付方式</h2>
+    <p>扫描下方二维码，备注 InsightBrowser Hosting 账号</p>
+    <div class="qr-codes">
+        <div class="qr-item">
+            <h3>微信支付</h3>
+            <div class="qr-image">
+                <img src="/assets/wechat_pay.jpg" alt="微信支付二维码" onerror="this.onerror=null; this.parentElement.innerHTML='<p style=\'color:#999\'>微信支付码未配置</p>'">
+            </div>
+            <p class="qr-hint">微信扫码支付</p>
+        </div>
+        <div class="qr-item">
+            <h3>支付宝</h3>
+            <div class="qr-image">
+                <img src="/assets/alipay.jpg" alt="支付宝二维码" onerror="this.onerror=null; this.parentElement.innerHTML='<p style=\'color:#999\'>支付宝码未配置</p>'">
+            </div>
+            <p class="qr-hint">支付宝扫码支付</p>
+        </div>
+    </div>
+</section>
+
+<section class="faq-section">
+    <h2>❓ 常见问题</h2>
+    <div class="faq-list">
+        <div class="faq-item">
+            <h3>免费版能用多久？</h3>
+            <p>免费版不限时间，每月 100 次调用，1 个托管站。适合个人测试和学习使用。</p>
+        </div>
+        <div class="faq-item">
+            <h3>可以随时升级/降级吗？</h3>
+            <p>可以。升级立即生效，降级在下个计费周期生效。数据不会丢失。</p>
+        </div>
+        <div class="faq-item">
+            <h3>支持私有部署吗？</h3>
+            <p>企业版支持私有部署，可以在你的服务器上运行整个平台。请联系客服了解更多。</p>
+        </div>
+        <div class="faq-item">
+            <h3>如何退款？</h3>
+            <p>购买后 7 天内可无条件退款。联系客服并提供支付凭证即可。</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

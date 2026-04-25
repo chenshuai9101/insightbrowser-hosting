@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}创建托管站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>🚀 创建托管站</h1>
+    <p>填写 Agent 能力描述，我们自动生成并托管运行</p>
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<form method="POST" action="/create" class="site-form" id="createForm">
+    <div class="form-group">
+        <label for="name">网站名称 *</label>
+        <input type="text" id="name" name="name" required placeholder="例如：智能新闻聚合器">
+    </div>
+
+    <div class="form-group">
+        <label for="site_type">网站类型 *</label>
+        <select id="site_type" name="site_type" required>
+            {% for st in site_types %}
+            <option value="{{ st.id }}">{{ st.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="description">一句话描述 *</label>
+        <textarea id="description" name="description" rows="3" required placeholder="描述你的 Agent 站是做什么的，例如：自动聚合全网最新科技新闻并进行智能分类"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>能力列表（Agent Capabilities）</label>
+        <p class="form-hint">定义你的 Agent 能做什么</p>
+        <div id="capabilities-container">
+            <div class="capability-item" data-index="0">
+                <div class="capability-header">
+                    <h4>能力 #<span class="cap-index">1</span></h4>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeCapability(this)" style="display:none">删除</button>
+                </div>
+                <div class="capability-fields">
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>能力 ID *</label>
+                            <input type="text" class="cap-id" placeholder="例如：get_news" required>
+                        </div>
+                        <div class="form-group half">
+                            <label>能力名称 *</label>
+                            <input type="text" class="cap-name" placeholder="例如：获取新闻" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>能力描述</label>
+                        <textarea class="cap-desc" rows="2" placeholder="描述这个能力做什么"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>参数（JSON 格式，可选）</label>
+                        <textarea class="cap-params" rows="2" placeholder='[{"name": "keyword", "type": "string", "description": "搜索关键词", "required": true}]'></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="addCapability()">+ 添加能力</button>
+    </div>
+
+    <div class="form-group">
+        <label for="data_source">数据来源</label>
+        <select id="data_source" name="data_source">
+            <option value="manual">手动输入</option>
+            <option value="api">API 调用</option>
+            <option value="crawl">定时爬取</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="plan">选择套餐</label>
+        <select id="plan" name="plan">
+            {% for plan_id, plan in plans.items() %}
+            <option value="{{ plan_id }}">{{ plan.name }} - {{ plan.price_label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label class="checkbox-label">
+            <input type="checkbox" name="register_registry">
+            创建后自动注册到 InsightBrowser Registry
+        </label>
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn btn-primary" onclick="submitForm()">创建托管站</button>
+        <a href="/" class="btn btn-outline">取消</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let capCount = 1;
+
+function addCapability() {
+    const container = document.getElementById('capabilities-container');
+    const items = container.querySelectorAll('.capability-item');
+    capCount = items.length;
+
+    const div = document.createElement('div');
+    div.className = 'capability-item';
+    div.dataset.index = capCount;
+    div.innerHTML = `
+        <div class="capability-header">
+            <h4>能力 #<span class="cap-index">${capCount + 1}</span></h4>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeCapability(this)">删除</button>
+        </div>
+        <div class="capability-fields">
+            <div class="form-row">
+                <div class="form-group half">
+                    <label>能力 ID *</label>
+                    <input type="text" class="cap-id" placeholder="例如：get_news" required>
+                </div>
+                <div class="form-group half">
+                    <label>能力名称 *</label>
+                    <input type="text" class="cap-name" placeholder="例如：获取新闻" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>能力描述</label>
+                <textarea class="cap-desc" rows="2" placeholder="描述这个能力做什么"></textarea>
+            </div>
+            <div class="form-group">
+                <label>参数（JSON 格式，可选）</label>
+                <textarea class="cap-params" rows="2" placeholder='[{"name": "keyword", "type": "string", "description": "搜索关键词", "required": true}]'></textarea>
+            </div>
+        </div>
+    `;
+    container.appendChild(div);
+    capCount++;
+
+    // Show delete button on first item if there are multiple
+    if (items.length > 0) {
+        items[0].querySelector('.btn-danger').style.display = 'inline-block';
+    }
+    updateIndices();
+}
+
+function removeCapability(btn) {
+    const item = btn.closest('.capability-item');
+    item.remove();
+    const items = document.querySelectorAll('.capability-item');
+    if (items.length === 1) {
+        items[0].querySelector('.btn-danger').style.display = 'none';
+    }
+    updateIndices();
+}
+
+function updateIndices() {
+    const items = document.querySelectorAll('.capability-item');
+    items.forEach((item, i) => {
+        item.querySelector('.cap-index').textContent = i + 1;
+        item.dataset.index = i;
+    });
+}
+
+function submitForm() {
+    const capabilities = [];
+    const items = document.querySelectorAll('.capability-item');
+
+    for (const item of items) {
+        const id = item.querySelector('.cap-id').value.trim();
+        const name = item.querySelector('.cap-name').value.trim();
+        const desc = item.querySelector('.cap-desc').value.trim();
+        const paramsText = item.querySelector('.cap-params').value.trim();
+
+        if (!id || !name) {
+            alert('请填写所有能力 ID 和名称');
+            return;
+        }
+
+        let params = [];
+        if (paramsText) {
+            try {
+                params = JSON.parse(paramsText);
+            } catch (e) {
+                alert(`能力 "${name}" 的参数 JSON 格式错误`);
+                return;
+            }
+        }
+
+        capabilities.push({
+            id: id,
+            name: name,
+            description: desc,
+            parameters: params
+        });
+    }
+
+    // Add hidden field for capabilities
+    const form = document.getElementById('createForm');
+    let hidden = document.querySelector('input[name="capabilities_json"]');
+    if (!hidden) {
+        hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'capabilities_json';
+        form.appendChild(hidden);
+    }
+    hidden.value = JSON.stringify(capabilities);
+
+    form.submit();
+}
+</script>
+{% endblock %}

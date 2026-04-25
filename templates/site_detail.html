@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}{{ site.name }} - 托管站管理{% endblock %}
+{% block content %}
+<div class="site-detail">
+    <div class="page-header">
+        <div class="header-with-status">
+            <h1>🔧 {{ site.name }}</h1>
+            <span class="status-badge status-{{ site.status }}">{{ site.status }}</span>
+        </div>
+        <div class="header-actions">
+            <form method="POST" action="/site/{{ site.id }}/toggle-status" style="display:inline">
+                {% if site.status == 'running' %}
+                <button type="submit" class="btn btn-warning">⏸ 停止</button>
+                {% else %}
+                <button type="submit" class="btn btn-success">▶️ 启动</button>
+                {% endif %}
+            </form>
+            <form method="POST" action="/site/{{ site.id }}/delete" style="display:inline" onsubmit="return confirm('确定要删除这个托管站吗？此操作不可撤销。')">
+                <button type="submit" class="btn btn-danger">🗑 删除</button>
+            </form>
+        </div>
+    </div>
+
+    {% if just_created %}
+    <div class="alert alert-success">
+        ✅ 托管站创建成功！系统已自动生成 agent.json 和运行模板。
+    </div>
+    {% endif %}
+
+    {% if request.query_params.get('updated') == 'true' %}
+    <div class="alert alert-success">托管站已更新</div>
+    {% endif %}
+
+    <div class="detail-grid">
+        <div class="detail-card">
+            <h3>📊 运行统计</h3>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-value">{{ site.call_count }}</span>
+                    <span class="stat-label">被调用次数</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ site.last_active or '暂无' }}</span>
+                    <span class="stat-label">最后活跃时间</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ site.created_at[:10] }}</span>
+                    <span class="stat-label">创建日期</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <h3>📄 agent.json</h3>
+            <div class="json-preview">
+                <pre><code>{{ site.agent_json[:500] }}{% if site.agent_json and site.agent_json|length > 500 %}...{% endif %}</code></pre>
+            </div>
+            <div class="action-links">
+                <a href="/api/site/{{ site.id }}/agent.json" class="btn btn-sm btn-secondary" target="_blank">查看完整 agent.json</a>
+                <a href="/api/site/{{ site.id }}/template" class="btn btn-sm btn-secondary" target="_blank">查看运行模板</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="edit-section">
+        <h2>✏️ 编辑托管站</h2>
+        <form method="POST" action="/site/{{ site.id }}/update" class="site-form">
+            <div class="form-group">
+                <label for="name">网站名称</label>
+                <input type="text" id="name" name="name" value="{{ site.name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="site_type">网站类型</label>
+                <select id="site_type" name="site_type">
+                    {% for st in site_types %}
+                    <option value="{{ st.id }}" {% if st.id == site.site_type %}selected{% endif %}>{{ st.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="description">描述</label>
+                <textarea id="description" name="description" rows="3" required>{{ site.description }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="capabilities_json">能力列表 (JSON)</label>
+                <textarea id="capabilities_json" name="capabilities_json" rows="6" class="code-textarea">{{ site.capabilities | tojson(indent=2) }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="data_source">数据来源</label>
+                <select id="data_source" name="data_source">
+                    <option value="manual" {% if site.data_source == 'manual' %}selected{% endif %}>手动输入</option>
+                    <option value="api" {% if site.data_source == 'api' %}selected{% endif %}>API 调用</option>
+                    <option value="crawl" {% if site.data_source == 'crawl' %}selected{% endif %}>定时爬取</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="status">状态</label>
+                    <select id="status" name="status">
+                        <option value="running" {% if site.status == 'running' %}selected{% endif %}>运行中</option>
+                        <option value="stopped" {% if site.status == 'stopped' %}selected{% endif %}>已停止</option>
+                        <option value="error" {% if site.status == 'error' %}selected{% endif %}>错误</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存修改</button>
+                <a href="/my-sites" class="btn btn-outline">返回列表</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

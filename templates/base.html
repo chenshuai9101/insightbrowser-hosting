@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}InsightBrowser Hosting{% endblock %} - Agent 托管平台</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">🔮 InsightBrowser Hosting</a>
+            <div class="nav-links">
+                <a href="/">首页</a>
+                <a href="/create">创建托管站</a>
+                <a href="/my-sites">我的托管站</a>
+                <a href="/pricing">定价</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 InsightBrowser Hosting - Agent 托管平台</p>
+            <p>InsightLabs · 让每个人都能拥有自己的 Agent 站</p>
+        </div>
+    </footer>
+</body>
+</html>

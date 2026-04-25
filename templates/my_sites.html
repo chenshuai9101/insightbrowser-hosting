@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}我的托管站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📋 我的托管站</h1>
+    <p>管理你的所有 Agent 托管站</p>
+    <a href="/create" class="btn btn-primary">+ 创建新站点</a>
+</div>
+
+{% if request.query_params.get('deleted') == 'true' %}
+<div class="alert alert-success">托管站已删除</div>
+{% endif %}
+
+{% if sites %}
+<div class="sites-grid">
+    {% for site in sites %}
+    <div class="site-card">
+        <div class="site-card-header">
+            <h3>{{ site.name }}</h3>
+            <span class="status-badge status-{{ site.status }}">{{ site.status }}</span>
+        </div>
+        <div class="site-card-body">
+            <p class="site-desc">{{ site.description[:100] }}{% if site.description|length > 100 %}...{% endif %}</p>
+            <div class="site-meta">
+                <span class="meta-item">📂 {{ site.site_type }}</span>
+                <span class="meta-item">📞 {{ site.call_count }} 次调用</span>
+                <span class="meta-item">📅 {{ site.created_at[:10] }}</span>
+            </div>
+        </div>
+        <div class="site-card-footer">
+            <a href="/site/{{ site.id }}" class="btn btn-sm btn-primary">管理</a>
+            <a href="/api/site/{{ site.id }}/agent.json" class="btn btn-sm btn-secondary" target="_blank">agent.json</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📡</div>
+    <h2>还没有托管站</h2>
+    <p>创建你的第一个 Agent 托管站，几分钟就能上线</p>
+    <a href="/create" class="btn btn-primary btn-large">立即创建</a>
+</div>
+{% endif %}
+{% endblock %}
