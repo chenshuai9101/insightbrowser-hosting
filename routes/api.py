@@ -1,10 +1,10 @@
 """InsightBrowser Hosting - API Routes"""
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 from typing import List, Optional
-from models import init_db, generate_site_template
+from models import generate_site_template
 from services.hosting import hosting_service
 
 router = APIRouter(prefix="/api")
