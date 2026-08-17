@@ -8,8 +8,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 import os
 
-from config import HOST, PORT, DEBUG, BASE_DIR
-from models import init_db
+from config import HOST, PORT, DEBUG, BASE_DIR, DEFAULT_OWNER
+from models import init_db, get_or_create_owner_key
 from routes.api import router as api_router
 from routes.pages import router as pages_router
 
@@ -38,6 +38,7 @@ app.include_router(api_router)
 async def startup():
     """Initialize database on startup"""
     init_db()
+    owner_key = get_or_create_owner_key(DEFAULT_OWNER)
     print(f"""
 ╔══════════════════════════════════════════════╗
 ║        InsightBrowser Hosting v2.0          ║
@@ -49,7 +50,10 @@ async def startup():
 ║  定价:      http://localhost:{PORT}/pricing   ║
 ║  API:       http://localhost:{PORT}/api/sites ║
 ╚══════════════════════════════════════════════╝
-""")
+""" + (f"""
+🔑 Owner API Key（调用 /api/* 写接口时放在 X-Owner-Key 请求头，仅显示一次）:
+   {owner_key}
+""" if owner_key else ""))
 
 
 @app.get("/robots.txt", response_class=HTMLResponse)

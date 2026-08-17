@@ -3,8 +3,10 @@
 import sqlite3
 import json
 import os
+import hashlib
+import secrets
 from datetime import datetime
-from config import DATABASE
+from config import DATABASE, PUBLIC_BASE_URL
 
 
 def get_db():
@@ -36,6 +38,13 @@ def init_db():
             agent_json TEXT,
             created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+        );
+
+        CREATE TABLE IF NOT EXISTS owner_keys (
+            owner TEXT PRIMARY KEY,
+            key_hash TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            last_used_at TEXT
         );
     """)
     conn.commit()
@@ -150,7 +159,7 @@ def generate_agent_json(site_id, conn=None):
             "type": site["site_type"],
             "description": site["description"],
             "hosted_by": "InsightBrowser Hosting",
-            "endpoint": f"/api/sites/{site['id']}/query"
+            "endpoint": f"{PUBLIC_BASE_URL}/api/site/{site['id']}"
         },
         "capabilities": capabilities,
         "meta": {
@@ -170,6 +179,42 @@ def generate_agent_json(site_id, conn=None):
         conn.close()
 
     return agent
+
+
+def get_or_create_owner_key(owner: str) -> str:
+    """为 owner 生成（或复用）管理 API key，明文只返回一次。"""
+    conn = get_db()
+    row = conn.execute("SELECT key_hash FROM owner_keys WHERE owner = ?", (owner,)).fetchone()
+    if row:
+        conn.close()
+        return None  # key 已存在，不重复暴露
+    api_key = f"ibh_{secrets.token_urlsafe(24)}"
+    conn.execute(
+        "INSERT INTO owner_keys (owner, key_hash, created_at) VALUES (?, ?, datetime('now', 'localtime'))",
+        (owner, hashlib.sha256(api_key.encode("utf-8")).hexdigest()),
+    )
+    conn.commit()
+    conn.close()
+    return api_key
+
+
+def verify_owner_key(owner: str, api_key: str) -> bool:
+    if not api_key:
+        return False
+    conn = get_db()
+    row = conn.execute("SELECT key_hash FROM owner_keys WHERE owner = ?", (owner,)).fetchone()
+    if not row:
+        conn.close()
+        return False
+    ok = secrets.compare_digest(row["key_hash"], hashlib.sha256(api_key.encode("utf-8")).hexdigest())
+    if ok:
+        conn.execute(
+            "UPDATE owner_keys SET last_used_at = datetime('now', 'localtime') WHERE owner = ?",
+            (owner,),
+        )
+        conn.commit()
+    conn.close()
+    return ok
 
 
 def generate_site_template(site_id):

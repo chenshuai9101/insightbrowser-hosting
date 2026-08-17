@@ -6,15 +6,22 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Server config
-HOST = "0.0.0.0"
-PORT = 7001
-DEBUG = True
+HOST = os.getenv("INSIGHTBROWSER_HOSTING_HOST", "127.0.0.1")
+PORT = int(os.getenv("INSIGHTBROWSER_HOSTING_PORT", "7001"))
+DEBUG = os.getenv("INSIGHTBROWSER_HOSTING_DEBUG", "0") == "1"
 
 # Database
 DATABASE = os.path.join(BASE_DIR, "data", "hosting.db")
 
 # Registry URL (for auto-registration)
-REGISTRY_URL = "http://localhost:7000"
+REGISTRY_URL = os.getenv("INSIGHTBROWSER_REGISTRY_URL", "http://localhost:7000")
+
+# 对外可达的基础地址（用于生成绝对 endpoint 注册到 Registry）。
+# 公网部署必须显式设置，例如 https://hosting.example.com
+PUBLIC_BASE_URL = os.getenv("INSIGHTBROWSER_HOSTING_PUBLIC_URL", f"http://localhost:{PORT}")
+
+# 本地管理端默认 owner 与 API key（用于页面路由的演示模式）
+DEFAULT_OWNER = os.getenv("INSIGHTBROWSER_HOSTING_OWNER", "default")
 
 # Asset paths
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")

@@ -2,7 +2,7 @@
 
 import json
 from models import get_site, get_sites, create_site, update_site, delete_site, increment_call_count, generate_agent_json, generate_site_template
-from config import REGISTRY_URL, PLANS
+from config import REGISTRY_URL, PUBLIC_BASE_URL, PLANS
 
 
 class HostingService:
@@ -89,24 +89,43 @@ class HostingService:
 
     @staticmethod
     def register_with_registry(site_id):
-        """Register a hosted site with the InsightBrowser Registry"""
+        """Register a hosted site with the InsightBrowser Registry.
+
+        按 Registry 的真实契约 POST /api/register（旧代码误用 /api/agents，
+        且 payload 形状不匹配，导致注册永远失败）。
+        """
         import requests
         try:
             site = get_site(site_id)
             if not site:
                 return {"success": False, "error": "Site not found"}
 
-            agent_data = json.loads(site["agent_json"]) if site.get("agent_json") else None
-            if not agent_data:
-                return {"success": False, "error": "agent.json not generated"}
+            capabilities = json.loads(site["capabilities"]) if isinstance(site.get("capabilities"), str) else site.get("capabilities") or []
+            payload = {
+                "name": site["name"],
+                "type": site["site_type"],
+                "description": site.get("description", ""),
+                "owner": site.get("owner", "default"),
+                "endpoint": f"{PUBLIC_BASE_URL}/api/site/{site_id}",
+                "capabilities": [
+                    {"name": c.get("name", c.get("id", "capability")),
+                     "description": c.get("description", "")}
+                    for c in capabilities
+                ],
+            }
 
             resp = requests.post(
-                f"{REGISTRY_URL}/api/agents",
-                json=agent_data,
+                f"{REGISTRY_URL}/api/register",
+                json=payload,
                 timeout=10
             )
             if resp.status_code in (200, 201):
-                return {"success": True, "registry_id": resp.json().get("id")}
+                data = resp.json()
+                return {
+                    "success": True,
+                    "registry_id": data.get("site_id") or data.get("id"),
+                    "site_id": site_id,
+                }
             else:
                 return {"success": False, "error": f"Registry returned {resp.status_code}: {resp.text}"}
         except requests.exceptions.ConnectionError:
